@@ -49,32 +49,6 @@ func validateConfig(config Config) error {
 	return nil
 }
 
-/*// Si ya existe una conexión abierta
-	// Cerrarla
-		// Si err != nil
-			// Salgo
-// Abrir una conexión
-	// Si err != nil
-		// Salgo
-// Seteo nueva conexion
-// Comenzar comunicación segura
-	// Si err != nil
-		// Ciero conexion
-		// Salgo
-// Autenticarme
-	// Si err != nil
-		//	La conexion ya se cerro, solamente tengo que setear que no hay conexion
-// Setear sender
-		// La conexion no se cerro, la cierro y seteo que no tenemos ninguna conexion
-//Setear receivers
-	// La conexion no se cerro, la cierro y seteo que no tenemos ninguna conexion
-// Enviar mail
-	// Si fallo, cerrar conexion y setear que no existe ninguna conexion
-// Cerrar conexión
-	// Si falla
-		// Salir
-*/
-
 func (c *Client) Open() error {
 	if c.client != nil {
 		if err := c.quit(); err != nil {
