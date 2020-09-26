@@ -118,19 +118,7 @@ func (c *Client) Auth() error {
 	return nil
 }
 
-func (c *Client) Send(from string, to []string, message string) (err error) {
-	defer func() error {
-		if err != nil {
-			if err := c.quit(); err != nil {
-				return err
-			}
-
-			return err
-		}
-
-		return nil
-	}()
-
+func (c *Client) Send(from string, to []string, message string) error {
 	if err := c.client.Mail(from); err != nil {
 		return fmt.Errorf("configurating sender (%s): %v", from, err)
 	}
@@ -146,13 +134,13 @@ func (c *Client) Send(from string, to []string, message string) (err error) {
 		return fmt.Errorf("configurating message: %v", err)
 	}
 
-	w.Close()
+	defer w.Close()
 
 	if _, err := fmt.Fprint(w, message); err != nil {
 		return fmt.Errorf("sending message: %v", err)
 	}
 
-	return nil
+	return c.quit()
 }
 
 func (c *Client) Quit() error {
