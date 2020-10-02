@@ -23,7 +23,8 @@ func TestHandler_SendEmail(t *testing.T) {
 	})
 
 	b := []byte(`{
-		"to": "failToImprove@gmail.com",
+		"to": ["failToImprove@gmail.com"],
+		"subject": "test",
 		"message": "fail to improve"
 	}`)
 
@@ -31,7 +32,7 @@ func TestHandler_SendEmail(t *testing.T) {
 	ts := httptest.NewServer(w.Router)
 	defer ts.Close()
 
-	resp, err := http.Post(fmt.Sprintf("%s/email/me", ts.URL), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("%s/email", ts.URL), "application/json", bytes.NewReader(b))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,8 @@ func TestHandler_SendEmail_HandlerError(t *testing.T) {
 	})
 
 	b := []byte(`{
-		"to": "failToImprove@gmail.com",
+		"to": ["failToImprove@gmail.com"],
+		"subject": "test",
 		"message": "fail to improve"
 	}`)
 
@@ -60,7 +62,7 @@ func TestHandler_SendEmail_HandlerError(t *testing.T) {
 	ts := httptest.NewServer(w.Router)
 	defer ts.Close()
 
-	resp, err := http.Post(fmt.Sprintf("%s/email/me", ts.URL), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("%s/email", ts.URL), "application/json", bytes.NewReader(b))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,33 +89,44 @@ func TestHandler_SendEmail_UnprocessableEntityError(t *testing.T) {
 		{
 			name: "malformed message",
 			b: []byte(`{
-				"to": "failToImprove@gmail.com",
-				"message": here is the error
+				"to": ["failToImprove@gmail.com"],
+				"subject": "test",
+				"message": fail to improve
 			}`),
-			expectedError: "decoding request:unprocessable entity invalid character 'h' looking for beginning of value",
+			expectedError: "decoding request:unprocessable entity invalid character 'i' in literal false (expecting 'l')",
 		},
 		{
 			name: "empty destination",
 			b: []byte(`{
-				"to": "",
-				"message": "hi"
+				"to": [],
+				"subject": "test",
+				"message": "fail to improve"
 			}`),
-			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.To' Error:Field validation for 'To' failed on the 'required' tag",
+			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.To' Error:Field validation for 'To' failed on the 'min' tag",
 		},
-
 		{
 			name: "invalid email",
 			b: []byte(`{
-				"to": "invalidEmail.com",
-				"message": "hi"
+				"to": ["failToImprove@gmail"],
+				"subject": "test",
+				"message": "fail to improve"
 			}`),
-			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.To' Error:Field validation for 'To' failed on the 'email' tag",
+			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.To[0]' Error:Field validation for 'To[0]' failed on the 'email' tag",
 		},
-
+		{
+			name: "max destination",
+			b: []byte(`{
+				"to": ["failToImprove@gmail","failToImprove@gmail","failToImprove@gmail","failToImprove@gmail","failToImprove@gmail","failToImprove@gmail"],
+				"subject": "test",
+				"message": "test"
+			}`),
+			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.To' Error:Field validation for 'To' failed on the 'max' tag",
+		},
 		{
 			name: "empty message",
 			b: []byte(`{
-				"to": "failToImprove@gmail.com",
+				"to": ["failToImprove@gmail.com"],
+				"subject": "test",
 				"message": ""
 			}`),
 			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.Message' Error:Field validation for 'Message' failed on the 'required' tag",
@@ -121,7 +134,8 @@ func TestHandler_SendEmail_UnprocessableEntityError(t *testing.T) {
 		{
 			name: "message length exceeded",
 			b: []byte(`{
-				"to": "failToImprove@gmail.com",
+				"to": ["failToImprove@gmail.com"],
+				"subject": "test",
 				"message": "asasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsaasasddsasaaddsasasddsasaaddsasasddsasaaddsasasddsasaaddsasasda"
 			}`),
 			expectedError: "validating request:unprocessable entity Key: 'SendEmailRequest.Message' Error:Field validation for 'Message' failed on the 'max' tag",
@@ -142,7 +156,7 @@ func TestHandler_SendEmail_UnprocessableEntityError(t *testing.T) {
 			ts := httptest.NewServer(w.Router)
 			defer ts.Close()
 
-			resp, err := http.Post(fmt.Sprintf("%s/email/me", ts.URL), "application/json", bytes.NewReader(tc.b))
+			resp, err := http.Post(fmt.Sprintf("%s/email", ts.URL), "application/json", bytes.NewReader(tc.b))
 			if err != nil {
 				t.Fatal(err)
 			}

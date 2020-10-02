@@ -7,7 +7,7 @@ import (
 type EmailClient interface {
 	Open() error
 	Auth() error
-	Send(from string, to []string, message string) error
+	Send(from string, to []string, subject string, message string) error
 	Quit() error
 }
 
@@ -28,9 +28,7 @@ func (s *Service) SendEmail(req SendEmailRequest) error {
 		return err
 	}
 
-	from := os.Getenv("EMAIL")
-	to := []string{req.To}
-	if err := s.client.Send(from, to, req.Message); err != nil {
+	if err := s.client.Send(os.Getenv("EMAIL"), req.To, req.Subject, req.Message); err != nil {
 		return err
 	}
 

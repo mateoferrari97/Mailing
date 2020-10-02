@@ -20,8 +20,8 @@ func (e *emailClient) Auth() error {
 	return e.Mock.Called().Error(0)
 }
 
-func (e *emailClient) Send(from string, to []string, message string) error {
-	return e.Mock.Called(from, to, message).Error(0)
+func (e *emailClient) Send(from string, to []string, subject string, message string) error {
+	return e.Mock.Called(from, to, subject, message).Error(0)
 }
 
 func (e *emailClient) Quit() error {
@@ -30,17 +30,20 @@ func (e *emailClient) Quit() error {
 
 func TestSendEmail(t *testing.T) {
 	// Given
-	email := "mateo.ferrari97@gmail.com"
+	from := "mateo.ferrari97@gmail.com"
+	to := []string{"mateo.ferrari97@gmail.com"}
+	subject := "test"
 	message := "test"
 
 	c := &emailClient{}
 	c.On("Open").Return(nil)
 	c.On("Auth").Return(nil)
-	c.On("Send", email, []string{email}, message).Return(nil)
+	c.On("Send", from, to, subject, message).Return(nil)
 	c.On("Quit").Return(nil)
 
 	req := SendEmailRequest{
-		To:      email,
+		To:      to,
+		Subject: subject,
 		Message: message,
 	}
 
@@ -55,14 +58,16 @@ func TestSendEmail(t *testing.T) {
 
 func TestSendEmail_OpenError(t *testing.T) {
 	// Given
-	email := "mateo.ferrari97@gmail.com"
+	to := []string{"mateo.ferrari97@gmail.com"}
+	subject := "test"
 	message := "test"
 
 	c := &emailClient{}
 	c.On("Open").Return(errors.New("connection error"))
 
 	req := SendEmailRequest{
-		To:      email,
+		To:      to,
+		Subject: subject,
 		Message: message,
 	}
 
@@ -79,7 +84,8 @@ func TestSendEmail_OpenError(t *testing.T) {
 
 func TestSendEmail_AuthError(t *testing.T) {
 	// Given
-	email := "mateo.ferrari97@gmail.com"
+	to := []string{"mateo.ferrari97@gmail.com"}
+	subject := "test"
 	message := "test"
 
 	c := &emailClient{}
@@ -87,7 +93,8 @@ func TestSendEmail_AuthError(t *testing.T) {
 	c.On("Auth").Return(errors.New("authentication error"))
 
 	req := SendEmailRequest{
-		To:      email,
+		To:      to,
+		Subject: subject,
 		Message: message,
 	}
 
@@ -104,16 +111,19 @@ func TestSendEmail_AuthError(t *testing.T) {
 
 func TestSendEmail_SendError(t *testing.T) {
 	// Given
-	email := "mateo.ferrari97@gmail.com"
+	from := "mateo.ferrari97@gmail.com"
+	to := []string{"mateo.ferrari97@gmail.com"}
+	subject := "test"
 	message := "test"
 
 	c := &emailClient{}
 	c.On("Open").Return(nil)
 	c.On("Auth").Return(nil)
-	c.On("Send", email, []string{email}, message).Return(errors.New("sending email error"))
+	c.On("Send", from, to, subject, message).Return(errors.New("sending email error"))
 
 	req := SendEmailRequest{
-		To:      email,
+		To:      to,
+		Subject: subject,
 		Message: message,
 	}
 
@@ -130,17 +140,20 @@ func TestSendEmail_SendError(t *testing.T) {
 
 func TestSendEmail_QuitError(t *testing.T) {
 	// Given
-	email := "mateo.ferrari97@gmail.com"
+	from := "mateo.ferrari97@gmail.com"
+	to := []string{"mateo.ferrari97@gmail.com"}
+	subject := "test"
 	message := "test"
 
 	c := &emailClient{}
 	c.On("Open").Return(nil)
 	c.On("Auth").Return(nil)
-	c.On("Send", email, []string{email}, message).Return(nil)
+	c.On("Send", from, to, subject, message).Return(nil)
 	c.On("Quit").Return(errors.New("quitting connection error"))
 
 	req := SendEmailRequest{
-		To:      email,
+		To:      to,
+		Subject: subject,
 		Message: message,
 	}
 

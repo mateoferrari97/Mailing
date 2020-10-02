@@ -11,7 +11,7 @@ import (
 
 const (
 	getPing       = "/ping"
-	postSendEmail = "/email/me"
+	postSendEmail = "/email"
 )
 
 var _v = validator.New()
@@ -39,8 +39,9 @@ func (h *Handler) Ping() {
 }
 
 type SendEmailRequest struct {
-	To      string `json:"to" validate:"required,email"`
-	Message string `json:"message" validate:"required,min=1,max=1000"`
+	To      []string `json:"to" validate:"required,min=1,max=5,dive,email"`
+	Subject string   `json:"subject" validate:"required,min=1,max=100"`
+	Message string   `json:"message" validate:"required,min=1,max=1000"`
 }
 
 type SendEmailHandler func(req SendEmailRequest) error

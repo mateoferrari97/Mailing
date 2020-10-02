@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/smtp"
+	"strings"
 )
 
 type Client struct {
@@ -92,16 +93,22 @@ func (c *Client) Auth() error {
 	return nil
 }
 
-func (c *Client) Send(from string, to []string, message string) error {
+func (c *Client) Send(from string, to []string, subject string, message string) error {
+	var data []string
 	if err := c.client.Mail(from); err != nil {
 		return fmt.Errorf("configurating sender (%s): %v", from, err)
 	}
 
+	data = append(data, fmt.Sprintf("From:%s\r\n", from))
+
 	for _, r := range to {
+		data = append(data, fmt.Sprintf("To:%s\r\n", r))
 		if err := c.client.Rcpt(r); err != nil {
 			return fmt.Errorf("configurating reciever (%s): %v", r, err)
 		}
 	}
+
+	data = append(data, fmt.Sprintf("Subject:%s\r\n", subject))
 
 	w, err := c.client.Data()
 	if err != nil {
@@ -110,11 +117,13 @@ func (c *Client) Send(from string, to []string, message string) error {
 
 	defer w.Close()
 
-	if _, err := fmt.Fprint(w, message); err != nil {
+	data = append(data, fmt.Sprintf("\r\n%s", message))
+
+	if _, err := w.Write([]byte(strings.Join(data, ""))); err != nil {
 		return fmt.Errorf("sending message: %v", err)
 	}
 
-	return c.quit()
+	return nil
 }
 
 func (c *Client) Quit() error {
