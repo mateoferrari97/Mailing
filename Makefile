@@ -18,11 +18,3 @@ test:
 	@go test ./... -covermode=atomic -coverpkg=./... -count=1 -race;\
 	exit_code=$$?;\
  	exit $$exit_code
-
-.PHONY: docker-build
-docker-build:
-	test:
-	@echo "=> Building images"
-	@docker build --build-arg EMAIL=EMAIL --build-arg PASSWORD=$PASSWORD .
-
-
